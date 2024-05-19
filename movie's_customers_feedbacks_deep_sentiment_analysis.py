@@ -25,16 +25,12 @@ nltk.download('stopwords')
 # download IMDB dataset
 !wget "https://raw.githubusercontent.com/javaidnabi31/Word-Embeddding-Sentiment-Classification/master/movie_data.csv" -O "movie_data.csv"
 
-# list files in current directory
 !ls -lah
 
-# the path to the IMDB dataset
 dataset_path = 'movie_data.csv'
 
-# read file (dataset) into our program using pandas
 data = pd.read_csv(dataset_path)
 
-# display first 5 rows
 data.head()
 
 import re
@@ -46,28 +42,16 @@ english_stopwords = stopwords.words('english')
 stemmer = PorterStemmer()
 
 def clean_review(text):
-  # convert to lower case
   text = text.lower()
-
-  # remove none alphabetic characters
   text = re.sub(r'[^a-z]', ' ', text)
-
-  # stem words
-  # split into words
   tokens = word_tokenize(text)
-
-  # stemming of words
   stemmed = [stemmer.stem(word) for word in tokens]
-
   text = ' '.join(stemmed)
-
-  # remove stopwords
   text = ' '.join([word for word in text.split() if word not in english_stopwords])
 
   return text
 
 
-# apply to all dataset
 data['clean_review'] = data['review'].apply(clean_review)
 data.head()
 
@@ -78,8 +62,6 @@ from sklearn.model_selection import train_test_split
 X = data['clean_review'].values
 y = data['sentiment'].values
 
-# Split data into 50% training & 50% test
-# let's all use a random state of 42 for example to ensure having the same split
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
 
 print(x_train.shape, y_train.shape)
@@ -88,24 +70,12 @@ print(x_test.shape, y_test.shape)
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-# define your tokenizer (with num_words=10000)
 tokenizer_obj = Tokenizer(num_words=10000)
-
-# assign an index (number) to each word using fit_on_texts function
 tokenizer_obj.fit_on_texts(x_train)
-
-# will be used later to pad sequences
 max_length = 120
-
-# define vocabulary size
 vocab_size = len(tokenizer_obj.word_index) + 1
-
-# transform each text to a sequence of integers (to be used later in embeddings layer)
 X_train_tokens =  tokenizer_obj.texts_to_sequences(x_train)
 X_test_tokens =  tokenizer_obj.texts_to_sequences(x_test)
-
-
-# apply post-padding to the sequences
 X_train_pad = pad_sequences(X_train_tokens, maxlen=max_length, padding='post')
 X_test_pad = pad_sequences(X_test_tokens, maxlen=max_length, padding='post')
 
@@ -115,15 +85,10 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, LSTM, Dense
 
 embedding_dim = 300
-
-# FILL BLANKS
-# build the neural network
 model = Sequential()
 model.add(Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_length))
 model.add(LSTM(128))
 model.add(Dense(1, activation='sigmoid'))
-
-# compile model: assign loss & optimizer
 model.compile(loss = 'binary_crossentropy',
               optimizer = 'adam',
               metrics=['accuracy'])
